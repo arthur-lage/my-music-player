@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import Song1 from "./assets/song1.mp3";
 import {
@@ -21,6 +21,18 @@ export function App() {
 
   setInterval(() => {
     setSongProgress(audioPlayerRef.current.currentTime);
+    let target = document.getElementById("song-progress");
+
+    if (!target) return;
+
+    //@ts-ignore
+    const min = target.min;
+    //@ts-ignore
+    const max = target.max;
+    //@ts-ignore
+    const val = target.value;
+
+    target.style.backgroundSize = ((val - min) * 100) / (max - min) + "% 100%";
   }, 1000);
 
   const audioPlayerRef = useRef(new Audio(Song1));
@@ -35,10 +47,20 @@ export function App() {
     }
   }
 
-  useEffect(() => {}, []);
+  function handleSliderAction(e: any) {
+    let target = e.target;
 
-  function handleSliderAction(value: number) {
-    audioPlayerRef.current.currentTime = value;
+    if (e.target.type !== "range") {
+      target = document.getElementById("song-progress");
+    }
+
+    const min = target.min;
+    const max = target.max;
+    const val = target.value;
+
+    target.style.backgroundSize = ((val - min) * 100) / (max - min) + "% 100%";
+
+    audioPlayerRef.current.currentTime = target.value;
     setSongProgress(audioPlayerRef.current.currentTime);
   }
 
@@ -51,69 +73,79 @@ export function App() {
   }, [audioVolume]);
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen">
-      <header className="flex flex-col items-center">
-        <b className="text-xl text-zinc-900">{songName}</b>
+    <div className="flex flex-col justify-center items-center h-screen bg-[#091227]">
+      <div className="flex flex-col justify-center items-center rounded-lg">
+        <header className="flex flex-col items-center">
+          <span className="text-2xl text-white font-questrial">{songName}</span>
 
-        <p className="my-6 text-lg text-zinc-800 font-medium">{artistName}</p>
+          <p className="uppercase text-[#A5C0FF] mt-1 mb-8 text-lg opacity-70 font-questrial">
+            {artistName}
+          </p>
 
-        <img
-          className={`w-[17.5rem] spin-slow h-[17.5rem] object-cover border-4 border-black shadow-[0px 0px 3px 2px rgba(0,0,0,0.5)] rounded-full ${
-            isPlaying ? "" : "paused-animation"
-          }`}
-          src={albumImage}
-          alt={songName}
-        />
-      </header>
+          <img
+            className={`w-[15rem] h-[15rem] object-cover rounded-md image-shadow`}
+            src={albumImage}
+            alt={songName}
+          />
+        </header>
 
-      <div className="flex items-center gap-3 mt-5">
-        <span className="text-xl text-zinc-700 font-medium">
-          {Math.floor(audioPlayerRef.current.currentTime / 60)}:
-          {Math.floor(audioPlayerRef.current.currentTime % 60) < 10
-            ? `0${Math.floor(audioPlayerRef.current.currentTime % 60)}`
-            : Math.floor(audioPlayerRef.current.currentTime % 60)}
-        </span>
+        <div className="flex items-center flex-col w-full gap-3 mt-10">
+          <input
+            type="range"
+            min={0}
+            max={
+              Math.floor(audioPlayerRef.current.duration)
+                ? Math.floor(audioPlayerRef.current.duration)
+                : 0
+            }
+            step={0.1}
+            id="song-progress"
+            onChange={(e) => handleSliderAction(e)}
+            value={songProgress}
+            className="w-full h-[4px] rounded-[50rem] form-range"
+          />
 
-        <input
-          type="range"
-          min={0}
-          max={
-            Math.floor(audioPlayerRef.current.duration)
-              ? Math.floor(audioPlayerRef.current.duration)
-              : 0
-          }
-          step={0.1}
-          onChange={(e) => handleSliderAction(Number(e.target.value))}
-          value={songProgress}
-        />
+          <div className="flex items-center justify-between w-full">
+            <span className="text-lg text-[#A5C0FF] font-questrial">
+              {Math.floor(audioPlayerRef.current.currentTime / 60)}:
+              {Math.floor(audioPlayerRef.current.currentTime % 60) < 10
+                ? `0${Math.floor(audioPlayerRef.current.currentTime % 60)}`
+                : Math.floor(audioPlayerRef.current.currentTime % 60)}
+            </span>
 
-        <span className="text-xl text-zinc-700 font-medium">
-          {audioPlayerRef.current.duration
-            ? `${Math.floor(audioPlayerRef.current.duration / 60)}:${Math.round(
-                audioPlayerRef.current.duration % 60
-              )}`
-            : "0:00"}
-        </span>
+            <span className="text-lg text-[#A5C0FF] font-questrial">
+              {audioPlayerRef.current.duration
+                ? `${Math.floor(
+                    audioPlayerRef.current.duration / 60
+                  )}:${Math.round(audioPlayerRef.current.duration % 60)}`
+                : "0:00"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-5 mt-2">
+          <button className=" bg-transparent rounded-full p-3 hover:bg-[#ffffff10] transition-all duration-150">
+            <SkipBack color={"#fff"} size={32} />
+          </button>
+
+          <button
+            className=" bg-transparent rounded-full p-3 hover:bg-[#ffffff10] transition-all duration-150"
+            onClick={handlePauseButton}
+          >
+            {isPlaying ? (
+              <Pause color={"#fff"} size={32} />
+            ) : (
+              <Play color={"#fff"} size={32} />
+            )}
+          </button>
+
+          <button className=" bg-transparent rounded-full p-3 hover:bg-[#ffffff10] transition-all duration-150">
+            <SkipForward color={"#fff"} size={32} />
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-5 mt-5">
-        <button className="bg-transparent rounded-full p-3 hover:bg-zinc-300 transition-all duration-150 action-button-shadow">
-          <SkipBack size={32} />
-        </button>
-
-        <button
-          className="bg-transparent rounded-full p-3 hover:bg-zinc-300 transition-all duration-150 action-button-shadow"
-          onClick={handlePauseButton}
-        >
-          {isPlaying ? <Pause size={32} /> : <Play size={32} />}
-        </button>
-
-        <button className="bg-transparent rounded-full p-3 hover:bg-zinc-300 transition-all duration-150 action-button-shadow">
-          <SkipForward size={32} />
-        </button>
-      </div>
-
-      <div className="flex flex-col gap-4">
+      {/* <div className="flex flex-col gap-4">
         <SpeakerHigh size={32} />
 
         <input
@@ -125,7 +157,7 @@ export function App() {
           //@ts-ignore
           onInput={(e) => setAudioVolume(e.target.value)}
         />
-      </div>
+      </div> */}
     </div>
   );
 }
